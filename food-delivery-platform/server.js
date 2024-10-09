@@ -1,28 +1,33 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+const { sequelize } = require('./config/config'); 
+
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const orderRoutes = require('./routes/orderRoutes');
-const authMiddleware = require('./middleware/authMiddleware');
+
+dotenv.config();
 
 const app = express();
-const MONGO_URI = 'mongodb://127.0.0.1:27017/myLocalDatabase';  // Change to your MongoDB URI
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
+app.use(bodyParser.json());
 
-app.use('/auth', authRoutes);
-app.use('/users', authMiddleware, userRoutes);
-app.use('/restaurants', restaurantRoutes);
-app.use('/orders', authMiddleware, orderRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/orders', orderRoutes);
+const startServer = async () => {
+    try {
+        await sequelize.sync();
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+};
 
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch(err => {
-    console.error('Error connecting to MongoDB:', err);
-    process.exit(1); // Exit the application if there's an error
-  });
+startServer();

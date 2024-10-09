@@ -1,11 +1,47 @@
-const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
-    items: [{ name: String, quantity: Number, price: Number }],
-    status: { type: String, default: 'Pending' },
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/config'); 
+
+// Order model
+const Order = sequelize.define('Order', {
+    orderNumber: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id',
+        },
+    },
+    restaurantId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'restaurants',
+            key: 'id',
+        },
+    },
+    status: {
+        type: DataTypes.STRING,
+        defaultValue: 'pending', 
+    },
+}, {
+    tableName: 'orders', 
+    timestamps: true,
 });
+Order.associate = (models) => {
+    Order.belongsTo(models.User, {
+        foreignKey: 'userId',
+        as: 'user', 
+    });
+    Order.belongsTo(models.Restaurant, {
+        foreignKey: 'restaurantId',
+        as: 'restaurant', 
+    });
+};
 
-const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;
